@@ -1,0 +1,26 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+  background-color: #f4f6fb;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Slim scrollbars for wide tables */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
