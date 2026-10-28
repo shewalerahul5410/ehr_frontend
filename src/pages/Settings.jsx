@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -18,17 +19,23 @@ import api from "../api/axios";
 import Navbar from "../components/Navbar";
 import Toast from "../components/Toast";
 import StaffManagement from "../components/StaffManagement";
+import DoctorAvailability from "../components/DoctorAvailability";
 
 export function Settings() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Toast state
-  const [toast, setToast] = useState({ open: false, message: "", severity: "success" });
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
-  const showToast = (message, severity = "success") => {
+  // Stable reference so child effects that depend on it don't re-run every render
+  const showToast = useCallback((message, severity = "success") => {
     setToast({ open: true, message, severity });
-  };
+  }, []);
 
   const handleCloseToast = () => {
     setToast((prev) => ({ ...prev, open: false }));
@@ -53,15 +60,22 @@ export function Settings() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
+
       const response = await api.get("auth/me/");
+
       setProfile(response.data);
+
       setFormData({
         first_name: response.data.first_name || "",
         last_name: response.data.last_name || "",
         email: response.data.email || "",
       });
     } catch (err) {
-      showToast(err.response?.data?.detail || "Unable to load your profile settings.", "error");
+      showToast(
+        err.response?.data?.detail ||
+          "Unable to load your profile settings.",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -73,12 +87,20 @@ export function Settings() {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handlePasswordInputChange = (e) => {
     const { name, value } = e.target;
-    setPasswordData((prev) => ({ ...prev, [name]: value }));
+
+    setPasswordData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSaveProfile = async (e) => {
@@ -96,13 +118,23 @@ export function Settings() {
       showToast("Profile information saved successfully!");
     } catch (err) {
       const data = err.response?.data;
+
       if (typeof data === "object" && data !== null) {
         const errorList = Object.entries(data)
-          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(" ") : v}`)
+          .map(([k, v]) =>
+            `${k}: ${Array.isArray(v) ? v.join(" ") : v}`
+          )
           .join(" | ");
-        showToast(errorList || "Failed to update profile information.", "error");
+
+        showToast(
+          errorList || "Failed to update profile information.",
+          "error"
+        );
       } else {
-        showToast(err.response?.data?.detail || "Unable to save profile.", "error");
+        showToast(
+          err.response?.data?.detail || "Unable to save profile.",
+          "error"
+        );
       }
     } finally {
       setSavingProfile(false);
@@ -113,11 +145,16 @@ export function Settings() {
     e.preventDefault();
 
     if (passwordData.new_password.length < 8) {
-      showToast("New password must be at least 8 characters long.", "error");
+      showToast(
+        "New password must be at least 8 characters long.",
+        "error"
+      );
       return;
     }
 
-    if (passwordData.new_password !== passwordData.confirm_password) {
+    if (
+      passwordData.new_password !== passwordData.confirm_password
+    ) {
       showToast("New passwords do not match.", "error");
       return;
     }
@@ -131,17 +168,36 @@ export function Settings() {
         confirm_password: passwordData.confirm_password,
       });
 
-      showToast(response.data.detail || "Password changed successfully!");
-      setPasswordData({ current_password: "", new_password: "", confirm_password: "" });
+      showToast(
+        response.data.detail || "Password changed successfully!"
+      );
+
+      setPasswordData({
+        current_password: "",
+        new_password: "",
+        confirm_password: "",
+      });
     } catch (err) {
       const data = err.response?.data;
+
       if (typeof data === "object" && data !== null) {
         const errorList = Object.entries(data)
-          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(" ") : v}`)
+          .map(([k, v]) =>
+            `${k}: ${Array.isArray(v) ? v.join(" ") : v}`
+          )
           .join(" | ");
-        showToast(errorList || "Unable to change password. Please verify current password.", "error");
+
+        showToast(
+          errorList ||
+            "Unable to change password. Please verify current password.",
+          "error"
+        );
       } else {
-        showToast(err.response?.data?.detail || "Failed to change password.", "error");
+        showToast(
+          err.response?.data?.detail ||
+            "Failed to change password.",
+          "error"
+        );
       }
     } finally {
       setChangingPassword(false);
@@ -154,16 +210,30 @@ export function Settings() {
 
       <Container maxWidth="lg" sx={{ py: 3 }}>
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h5" sx={{ fontWeight: 800, color: "#0f172a" }}>
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: 800, color: "#0f172a" }}
+          >
             Account Settings & User Information
           </Typography>
-          <Typography variant="body2" sx={{ color: "#64748b", mt: 0.5 }}>
-            Update your profile details, clinical provider credentials, and security settings.
+
+          <Typography
+            variant="body2"
+            sx={{ color: "#64748b", mt: 0.5 }}
+          >
+            Update your profile details, clinical provider credentials,
+            and security settings.
           </Typography>
         </Box>
 
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              py: 8,
+            }}
+          >
             <CircularProgress />
           </Box>
         ) : (
@@ -181,12 +251,23 @@ export function Settings() {
               >
                 <Box className="d-flex align-items-center gap-2 mb-3">
                   <Person sx={{ color: "#1976d2" }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#0f172a" }}>
+
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      color: "#0f172a",
+                    }}
+                  >
                     Personal Profile & Provider Information
                   </Typography>
                 </Box>
 
-                <Box component="form" onSubmit={handleSaveProfile} className="d-flex flex-column gap-3">
+                <Box
+                  component="form"
+                  onSubmit={handleSaveProfile}
+                  className="d-flex flex-column gap-3"
+                >
                   <Grid container spacing={2}>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
@@ -228,7 +309,9 @@ export function Settings() {
                         size="small"
                         label="Username"
                         value={profile?.username || ""}
-                        slotProps={{ input: { readOnly: true } }}
+                        slotProps={{
+                          input: { readOnly: true },
+                        }}
                         helperText="System login identifier"
                       />
                     </Grid>
@@ -239,7 +322,9 @@ export function Settings() {
                         size="small"
                         label="Assigned System Role"
                         value={(profile?.role || "").toUpperCase()}
-                        slotProps={{ input: { readOnly: true } }}
+                        slotProps={{
+                          input: { readOnly: true },
+                        }}
                       />
                     </Grid>
 
@@ -250,13 +335,21 @@ export function Settings() {
                           size="small"
                           label="Linked Patient Record ID"
                           value={profile.patient_id}
-                          slotProps={{ input: { readOnly: true } }}
+                          slotProps={{
+                            input: { readOnly: true },
+                          }}
                         />
                       </Grid>
                     )}
                   </Grid>
 
-                  <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end" }}>
+                  <Box
+                    sx={{
+                      mt: 1,
+                      display: "flex",
+                      justifyContent: "flex-end",
+                    }}
+                  >
                     <Button
                       type="submit"
                       variant="contained"
@@ -270,10 +363,14 @@ export function Settings() {
                         borderRadius: "6px",
                         px: 2.5,
                         py: 0.8,
-                        "&:hover": { backgroundColor: "#1565c0" },
+                        "&:hover": {
+                          backgroundColor: "#1565c0",
+                        },
                       }}
                     >
-                      {savingProfile ? "Saving..." : "Save Profile Information"}
+                      {savingProfile
+                        ? "Saving..."
+                        : "Save Profile Information"}
                     </Button>
                   </Box>
                 </Box>
@@ -293,12 +390,23 @@ export function Settings() {
               >
                 <Box className="d-flex align-items-center gap-2 mb-3">
                   <LockReset sx={{ color: "#1976d2" }} />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#0f172a" }}>
+
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      color: "#0f172a",
+                    }}
+                  >
                     Change Password
                   </Typography>
                 </Box>
 
-                <Box component="form" onSubmit={handlePasswordChange} className="d-flex flex-column gap-3">
+                <Box
+                  component="form"
+                  onSubmit={handlePasswordChange}
+                  className="d-flex flex-column gap-3"
+                >
                   <TextField
                     fullWidth
                     size="small"
@@ -333,7 +441,13 @@ export function Settings() {
                     onChange={handlePasswordInputChange}
                   />
 
-                  <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end" }}>
+                  <Box
+                    sx={{
+                      mt: 1,
+                      display: "flex",
+                      justifyContent: "flex-end",
+                    }}
+                  >
                     <Button
                       type="submit"
                       variant="contained"
@@ -346,10 +460,14 @@ export function Settings() {
                         borderRadius: "6px",
                         px: 2.5,
                         py: 0.8,
-                        "&:hover": { backgroundColor: "#1565c0" },
+                        "&:hover": {
+                          backgroundColor: "#1565c0",
+                        },
                       }}
                     >
-                      {changingPassword ? "Updating..." : "Update Password"}
+                      {changingPassword
+                        ? "Updating..."
+                        : "Update Password"}
                     </Button>
                   </Box>
                 </Box>
@@ -358,10 +476,17 @@ export function Settings() {
           </Grid>
         )}
 
+        {/* Doctor Availability — doctors only */}
+        {!loading &&
+          (profile?.role || "").toLowerCase() === "doctor" && (
+            <DoctorAvailability showToast={showToast} />
+          )}
+
         {/* Only the super doctor (or admin) can add and invite staff */}
-        {!loading && ["superdoctor", "admin"].includes((profile?.role || "").toLowerCase()) && (
-          <StaffManagement showToast={showToast} />
-        )}
+        {!loading &&
+          ["superdoctor", "admin"].includes(
+            (profile?.role || "").toLowerCase()
+          ) && <StaffManagement showToast={showToast} />}
       </Container>
 
       {/* Toast Notification */}
